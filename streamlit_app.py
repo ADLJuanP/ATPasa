@@ -37,16 +37,20 @@ else:
     df['Fecha'] = pd.to_datetime(df['Fecha'], errors='coerce').dt.date  # Convertir a solo fecha (sin tiempo)
     df = df.dropna(subset=['Fecha'])  # Eliminar fechas no válidas
 
-    # Crear opciones para seleccionar Lote y Unidad
+    # Crear opciones para los filtros
+    centro_options = ['Todos'] + df['Centro'].unique().tolist()
     lote_options = ['Todos'] + df['Lote'].unique().tolist()
     unidad_options = ['Todos'] + df['Unidad'].unique().tolist()
 
     st.sidebar.header("Filtros")
+    selected_centro = st.sidebar.selectbox("Seleccionar Centro", centro_options)
     selected_lote = st.sidebar.selectbox("Seleccionar Lote", lote_options)
     selected_unidad = st.sidebar.selectbox("Seleccionar Unidad", unidad_options)
 
     # Filtrar los datos según la selección
     filtered_df = df.copy()
+    if selected_centro != 'Todos':
+        filtered_df = filtered_df[filtered_df['Centro'] == selected_centro]
     if selected_lote != 'Todos':
         filtered_df = filtered_df[filtered_df['Lote'] == selected_lote]
     if selected_unidad != 'Todos':
@@ -77,7 +81,10 @@ else:
 
         # Agregar título y etiquetas
         ax1.set_ylabel("ATPasa", fontsize=12)
-        ax1.set_title(f"Evolución ATPasa y Condición Externa\nLote: {selected_lote}, Unidad: {selected_unidad}", fontsize=16)
+        ax1.set_title(
+            f"Evolución ATPasa y Condición Externa\nCentro: {selected_centro}, Lote: {selected_lote}, Unidad: {selected_unidad}",
+            fontsize=16
+        )
 
         # Crear segundo eje (para gráfico de barras apiladas)
         ax2 = ax1.twinx()
@@ -93,4 +100,3 @@ else:
 
         # Mostrar el gráfico en Streamlit
         st.pyplot(fig)
-
