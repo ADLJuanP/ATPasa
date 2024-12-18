@@ -62,7 +62,7 @@ else:
         # Ordenar por fecha
         filtered_df = filtered_df.sort_values(by='Fecha')
 
-        # Convertir las fechas a un formato categórico para que seaborn las maneje correctamente
+        # Convertir la columna 'Fecha' en formato datetime a un formato adecuado para el gráfico
         filtered_df['Fecha'] = pd.to_datetime(filtered_df['Fecha']).dt.strftime('%Y-%m-%d')
 
         # Configuración de la figura
@@ -104,4 +104,5 @@ else:
 
         # Mostrar el gráfico en Streamlit
         st.pyplot(fig)
+
 
