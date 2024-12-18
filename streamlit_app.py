@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import matplotlib.dates as mdates
 from io import BytesIO
 import requests
 import openpyxl
@@ -13,20 +12,25 @@ st.set_page_config(layout="wide", page_title="Dashboard ATPasa")
 # Enlace de descarga directa del archivo de Google Drive
 url = "https://drive.google.com/uc?id=1pddBpb0xyn2WxRVXuL4oXI_R7kdFZuHX"
 
-# Descargar el archivo
+# Descargar el archivo y guardarlo en caché
 @st.cache_data
 def load_data(download_url):
-    response = requests.get(download_url)
-    if response.status_code == 200:
-        try:
+    try:
+        response = requests.get(download_url, stream=True)
+        if response.status_code == 200:
             return pd.read_excel(BytesIO(response.content), engine='openpyxl')
-        except Exception as e:
-            st.error(f"Error al leer el archivo: {e}")
+        else:
+            st.error("No se pudo descargar el archivo. Verifica el enlace.")
             return None
-    else:
-        st.error("No se pudo descargar el archivo. Verifica el enlace.")
+    except Exception as e:
+        st.error(f"Error al leer el archivo: {e}")
         return None
 
+# Botón para actualizar los datos
+if st.sidebar.button("Actualizar datos"):
+    st.cache_data.clear()  # Limpia la caché para forzar la recarga
+
+# Cargar los datos
 df = load_data(url)
 
 # Validar si `df` es válido
