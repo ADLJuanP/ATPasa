@@ -46,7 +46,10 @@ else:
     # Eliminar fechas no válidas (NaT)
     df = df.dropna(subset=['Fecha'])
 
-    # Asegurarse de que 'ATPasa' sea numérico
+    # Reemplazar comas por puntos en los valores numéricos
+    df['ATPasa'] = df['ATPasa'].astype(str).str.replace(',', '.', regex=False)
+    
+    # Asegurarse de que 'ATPasa' sea numérico después de reemplazar las comas
     df['ATPasa'] = pd.to_numeric(df['ATPasa'], errors='coerce')  # Convierte a NaN cualquier valor no numérico
     df = df.dropna(subset=['ATPasa'])  # Eliminar filas con 'ATPasa' no numérico
 
@@ -113,5 +116,4 @@ else:
 
         # Mostrar el gráfico en Streamlit
         st.pyplot(fig)
-
 
