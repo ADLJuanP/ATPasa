@@ -36,10 +36,6 @@ else:
     df['Fecha'] = pd.to_datetime(df['Fecha'], errors='coerce').dt.date  # Convertir a solo fecha (sin tiempo)
     df = df.dropna(subset=['Fecha'])  # Eliminar fechas no válidas
 
-    # Crear las nuevas columnas 'Mes-Día' y 'FechaNum'
-    df['Mes-Día'] = df['Fecha'].apply(lambda x: x.strftime('%m-%d'))  # Para mostrar en la gráfica
-    df['FechaNum'] = pd.to_numeric(df['Fecha'].apply(lambda x: x.strftime('%Y%m%d')), errors='coerce')  # Para ordenar
-
     # Crear opciones para los filtros
     centro_options = ['Todos'] + df['Centro'].unique().tolist()
     lote_options = ['Todos'] + df['Lote'].unique().tolist()
