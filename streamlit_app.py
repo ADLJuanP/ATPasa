@@ -105,4 +105,3 @@ else:
         # Mostrar el gráfico en Streamlit
         st.pyplot(fig)
 
-
