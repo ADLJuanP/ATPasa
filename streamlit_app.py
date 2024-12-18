@@ -1,4 +1,3 @@
-# Primer comando en el archivo
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -28,11 +27,6 @@ def load_data(download_url):
         st.error("No se pudo descargar el archivo. Verifica el enlace.")
         return None
 
-# Opción de botón para forzar la recarga de los datos
-if st.sidebar.button("Actualizar datos"):
-    st.cache_data.clear()  # Limpia la caché para forzar la recarga
-
-# Cargar los datos (sin caché cuando se presiona el botón)
 df = load_data(url)
 
 # Validar si `df` es válido
@@ -40,8 +34,14 @@ if df is None or df.empty:
     st.warning("No se encontraron datos. Revisa el enlace o el formato del archivo.")
 else:
     # Asegurarse de que la columna 'Fecha' esté en formato datetime (sin horas ni minutos)
-    df['Fecha'] = pd.to_datetime(df['Fecha'], errors='coerce').dt.date  # Convertir a solo fecha (sin tiempo)
-    df = df.dropna(subset=['Fecha'])  # Eliminar fechas no válidas
+    df['Fecha'] = pd.to_datetime(df['Fecha'], format='%d-%m-%Y', errors='coerce')  # Especificar el formato 'dd-mm-yyyy'
+    
+    # Eliminar fechas no válidas (NaT)
+    df = df.dropna(subset=['Fecha'])
+
+    # Asegurarse de que 'ATPasa' sea numérico
+    df['ATPasa'] = pd.to_numeric(df['ATPasa'], errors='coerce')  # Convierte a NaN cualquier valor no numérico
+    df = df.dropna(subset=['ATPasa'])  # Eliminar filas con 'ATPasa' no numérico
 
     # Crear opciones para los filtros
     centro_options = ['Todos'] + df['Centro'].unique().tolist()
@@ -83,7 +83,7 @@ else:
                       jitter=True, alpha=0.7, palette=palette, dodge=True, ax=ax1, legend=False)
 
         # Configurar las etiquetas de fecha en el eje x
-        ax1.set_xticklabels(filtered_df['Fecha'].astype(str), rotation=90)
+        ax1.set_xticklabels(filtered_df['Fecha'].dt.strftime('%d-%m-%Y'), rotation=90)  # Asegúrate de mostrar la fecha en formato adecuado
 
         # Agregar título y etiquetas
         ax1.set_ylabel("ATPasa", fontsize=12)
@@ -106,3 +106,4 @@ else:
 
         # Mostrar el gráfico en Streamlit
         st.pyplot(fig)
+
