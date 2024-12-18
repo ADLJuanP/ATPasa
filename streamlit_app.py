@@ -86,9 +86,9 @@ else:
         filtered_df = filtered_df.sort_values(by='Fecha')
 
         # Generar el título de forma segura
-        centro_title = ', '.join(selected_centro) if selected_centro else 'Todos'
-        lote_title = ', '.join(selected_lote) if selected_lote else 'Todos'
-        unidad_title = ', '.join(selected_unidad) if selected_unidad else 'Todos'
+        centro_title = ', '.join(map(str, selected_centro)) if selected_centro else 'Todos'
+        lote_title = ', '.join(map(str, selected_lote)) if selected_lote else 'Todos'
+        unidad_title = ', '.join(map(str, selected_unidad)) if selected_unidad else 'Todos'
 
         # Configuración de la figura
         fig, ax1 = plt.subplots(figsize=(14, 8))
