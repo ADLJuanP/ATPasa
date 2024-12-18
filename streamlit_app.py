@@ -110,7 +110,7 @@ from io import BytesIO
 import requests
 import openpyxl
 
-# Configuración de la página de Streamlit
+# Configuración de la página de Streamlit (DEBE SER EL PRIMER COMANDO)
 st.set_page_config(layout="wide", page_title="Dashboard ATPasa")
 
 # Enlace de descarga directa del archivo de Google Drive
