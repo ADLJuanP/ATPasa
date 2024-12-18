@@ -90,44 +90,44 @@ else:
         lote_title = ', '.join(map(str, selected_lote)) if selected_lote else 'Todos'
         unidad_title = ', '.join(map(str, selected_unidad)) if selected_unidad else 'Todos'
 
-        # Crear la columna 'Mes-Día' si no existe
-        filtered_df['Mes-Día'] = filtered_df['Fecha'].dt.strftime('%d-%m')
+        # Verificar si la columna 'Mes-Día' existe en los datos
+        if 'Mes-Día' not in filtered_df.columns:
+            st.error("La columna 'Mes-Día' no está presente en los datos.")
+        else:
+            # Configuración de la figura
+            fig, ax1 = plt.subplots(figsize=(14, 8))
 
-        # Configuración de la figura
-        fig, ax1 = plt.subplots(figsize=(14, 8))
+            # Crear la paleta de colores
+            palette = sns.color_palette("pastel", n_colors=filtered_df['C. Externa'].nunique()).as_hex()
 
-        # Crear la paleta de colores
-        palette = sns.color_palette("pastel", n_colors=filtered_df['C. Externa'].nunique()).as_hex()
+            # Crear el boxplot usando 'Mes-Día'
+            sns.boxplot(x=filtered_df['Mes-Día'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
 
-        # Crear el boxplot usando 'Mes-Día'
-        sns.boxplot(x=filtered_df['Mes-Día'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
+            # Crear el stripplot
+            sns.stripplot(x=filtered_df['Mes-Día'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
+                          jitter=True, alpha=0.7, palette=palette, dodge=True, ax=ax1, legend=False)
 
-        # Crear el stripplot
-        sns.stripplot(x=filtered_df['Mes-Día'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
-                      jitter=True, alpha=0.7, palette=palette, dodge=True, ax=ax1, legend=False)
+            # Configurar las etiquetas de fecha en el eje x
+            ax1.set_xticklabels(filtered_df['Mes-Día'], rotation=90)  # Mostrar 'Mes-Día' en el eje X
 
-        # Configurar las etiquetas de fecha en el eje x
-        ax1.set_xticklabels(filtered_df['Mes-Día'], rotation=90)  # Mostrar 'Mes-Día' en el eje X
+            # Agregar título y etiquetas
+            ax1.set_ylabel("ATPasa", fontsize=12)
+            ax1.set_title(
+                f"Evolución ATPasa y Condición Externa\nCentro(s): {centro_title}, Lote(s): {lote_title}, Unidad(es): {unidad_title}",
+                fontsize=16
+            )
 
-        # Agregar título y etiquetas
-        ax1.set_ylabel("ATPasa", fontsize=12)
-        ax1.set_title(
-            f"Evolución ATPasa y Condición Externa\nCentro(s): {centro_title}, Lote(s): {lote_title}, Unidad(es): {unidad_title}",
-            fontsize=16
-        )
+            # Crear segundo eje (para gráfico de barras apiladas)
+            ax2 = ax1.twinx()
+            percentages = filtered_df.groupby(['Fecha', 'C. Externa']).size().unstack(fill_value=0)
+            percentages = percentages.div(percentages.sum(axis=1), axis=0) * 100
 
-        # Crear segundo eje (para gráfico de barras apiladas)
-        ax2 = ax1.twinx()
-        percentages = filtered_df.groupby(['Fecha', 'C. Externa']).size().unstack(fill_value=0)
-        percentages = percentages.div(percentages.sum(axis=1), axis=0) * 100
+            percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=palette)
 
-        percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=palette)
+            ax2.set_ylabel("% de Categoría", fontsize=12)
+            ax2.set_ylim(0, 100)
+            ax2.grid(visible=False)
+            ax2.legend(title="Condición Externa", bbox_to_anchor=(1.15, 0.5), loc='center')
 
-        ax2.set_ylabel("% de Categoría", fontsize=12)
-        ax2.set_ylim(0, 100)
-        ax2.grid(visible=False)
-        ax2.legend(title="Condición Externa", bbox_to_anchor=(1.15, 0.5), loc='center')
-
-        # Mostrar el gráfico en Streamlit
-        st.pyplot(fig)
-
+            # Mostrar el gráfico en Streamlit
+            st.pyplot(fig)
