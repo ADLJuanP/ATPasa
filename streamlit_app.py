@@ -49,18 +49,18 @@ else:
     unidad_options = ['Todos'] + df['Unidad'].unique().tolist()
 
     st.sidebar.header("Filtros")
-    selected_centro = st.sidebar.selectbox("Seleccionar Centro", centro_options)
-    selected_lote = st.sidebar.selectbox("Seleccionar Lote", lote_options)
-    selected_unidad = st.sidebar.selectbox("Seleccionar Unidad", unidad_options)
+    selected_centro = st.sidebar.multiselect("Seleccionar Centro", centro_options)
+    selected_lote = st.sidebar.multiselect("Seleccionar Lote", lote_options)
+    selected_unidad = st.sidebar.multiselect("Seleccionar Unidad", unidad_options)
 
     # Filtrar los datos según la selección
     filtered_df = df.copy()
-    if selected_centro != 'Todos':
-        filtered_df = filtered_df[filtered_df['Centro'] == selected_centro]
-    if selected_lote != 'Todos':
-        filtered_df = filtered_df[filtered_df['Lote'] == selected_lote]
-    if selected_unidad != 'Todos':
-        filtered_df = filtered_df[filtered_df['Unidad'] == selected_unidad]
+    if selected_centro and 'Todos' not in selected_centro:
+        filtered_df = filtered_df[filtered_df['Centro'].isin(selected_centro)]
+    if selected_lote and 'Todos' not in selected_lote:
+        filtered_df = filtered_df[filtered_df['Lote'].isin(selected_lote)]
+    if selected_unidad and 'Todos' not in selected_unidad:
+        filtered_df = filtered_df[filtered_df['Unidad'].isin(selected_unidad)]
 
     # Verificar si hay datos después del filtrado
     if filtered_df.empty:
@@ -88,7 +88,7 @@ else:
         # Agregar título y etiquetas
         ax1.set_ylabel("ATPasa", fontsize=12)
         ax1.set_title(
-            f"Evolución ATPasa y Condición Externa\nCentro: {selected_centro}, Lote: {selected_lote}, Unidad: {selected_unidad}",
+            f"Evolución ATPasa y Condición Externa\nCentro(s): {', '.join(selected_centro) if selected_centro else 'Todos'}, Lote(s): {', '.join(selected_lote) if selected_lote else 'Todos'}, Unidad(es): {', '.join(selected_unidad) if selected_unidad else 'Todos'}",
             fontsize=16
         )
 
