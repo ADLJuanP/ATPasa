@@ -1,6 +1,1 @@
 streamlit
-matplotlib.pyplot
-seaborn
-requests
-matplotlib.dates
-io
