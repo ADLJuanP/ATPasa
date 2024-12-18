@@ -24,7 +24,7 @@ def load_data(download_url):
             st.error(f"Error al leer el archivo: {e}")
             return None
     else:
-        st.error("No se pudo descargar el archivo. verifica el enlace.")
+        st.error("No se pudo descargar el archivo. Verifica el enlace.")
         return None
 
 # Recargar los datos cuando el botón es presionado
@@ -79,6 +79,11 @@ else:
         # Ordenar por fecha
         filtered_df = filtered_df.sort_values(by='Fecha')
 
+        # Generar el título de forma segura
+        centro_title = ', '.join(selected_centro) if selected_centro else 'Todos'
+        lote_title = ', '.join(selected_lote) if selected_lote else 'Todos'
+        unidad_title = ', '.join(selected_unidad) if selected_unidad else 'Todos'
+
         # Configuración de la figura
         fig, ax1 = plt.subplots(figsize=(14, 8))
 
@@ -98,7 +103,7 @@ else:
         # Agregar título y etiquetas
         ax1.set_ylabel("ATPasa", fontsize=12)
         ax1.set_title(
-            f"Evolución ATPasa y Condición Externa\nCentro(s): {', '.join(selected_centro) if selected_centro else 'Todos'}, Lote(s): {', '.join(selected_lote) if selected_lote else 'Todos'}, Unidad(es): {', '.join(selected_unidad) if selected_unidad else 'Todos'}",
+            f"Evolución ATPasa y Condición Externa\nCentro(s): {centro_title}, Lote(s): {lote_title}, Unidad(es): {unidad_title}",
             fontsize=16
         )
 
