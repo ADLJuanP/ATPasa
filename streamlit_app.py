@@ -11,7 +11,7 @@ import openpyxl
 st.set_page_config(layout="wide", page_title="Dashboard ATPasa")
 
 # Enlace de descarga directa del archivo de Google Drive
-url = "https://drive.google.com/uc?id=1pddBpb0xyn2WxRVXuL4oXI_R7kdFZuHX"
+url = "https://drive.google.com/uc?id=1I4gN0K0S2RQmqpSPb2dQOM9effOhfNCO"
 
 # Descargar el archivo
 @st.cache_data
