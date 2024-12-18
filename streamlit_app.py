@@ -63,12 +63,14 @@ else:
     selected_lote = st.sidebar.multiselect("Seleccionar Lote", lote_options)
     selected_unidad = st.sidebar.multiselect("Seleccionar Unidad", unidad_options)
 
-    # Asegurarse de que `selected_unidad` es una lista, incluso si está vacío
-    if selected_unidad == []:  # Si no se seleccionaron unidades, se asigna 'Todos'
+    # Validar que selected_unidad siempre sea una lista
+    if selected_unidad == []:  # Si no se seleccionan unidades, poner 'Todos'
         selected_unidad = ['Todos']
-
+    
     # Filtrar los datos según la selección
     filtered_df = df.copy()
+    
+    # Aplicar filtros de Centro, Lote y Unidad
     if selected_centro and 'Todos' not in selected_centro:
         filtered_df = filtered_df[filtered_df['Centro'].isin(selected_centro)]
     if selected_lote and 'Todos' not in selected_lote:
@@ -125,5 +127,4 @@ else:
 
         # Mostrar el gráfico en Streamlit
         st.pyplot(fig)
-
 
