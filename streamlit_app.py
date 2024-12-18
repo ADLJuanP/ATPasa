@@ -27,15 +27,14 @@ def load_data(download_url):
         st.error("No se pudo descargar el archivo. Verifica el enlace.")
         return None
 
-# Variable para almacenar el DataFrame
-if 'df' not in st.session_state:
-    st.session_state.df = load_data(url)
-
-# Botón para recargar los datos
+# Recargar los datos cuando el botón es presionado
 if st.button("Recargar datos"):
-    st.session_state.df = load_data(url)  # Recargar el DataFrame
+    df = load_data(url)  # Descargar los datos nuevamente
+else:
+    if 'df' not in st.session_state:
+        st.session_state.df = load_data(url)  # Descargar los datos si no están en session_state
 
-df = st.session_state.df
+    df = st.session_state.df
 
 # Validar si `df` es válido
 if df is None or df.empty:
@@ -114,4 +113,5 @@ else:
 
         # Mostrar el gráfico en Streamlit
         st.pyplot(fig)
+
 
