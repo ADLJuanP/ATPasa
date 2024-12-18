@@ -94,8 +94,3 @@ else:
         # Mostrar el gráfico en Streamlit
         st.pyplot(fig)
 
-ax2.grid(visible=False)
-ax2.legend(title="Condición Externa", bbox_to_anchor=(1.15, 0.5), loc='center')
-
-# Mostrar el gráfico en Streamlit
-st.pyplot(fig)
