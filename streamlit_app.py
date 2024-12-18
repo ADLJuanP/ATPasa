@@ -38,15 +38,19 @@ else:
     df = df.dropna(subset=['Fecha'])  # Eliminar fechas no válidas
 
     # Crear opciones para seleccionar Lote y Unidad
-    lote_options = df['Lote'].unique()
-    unidad_options = df['Unidad'].unique()
+    lote_options = ["Todos"] + df['Lote'].unique().tolist()
+    unidad_options = ["Todos"] + df['Unidad'].unique().tolist()
 
     st.sidebar.header("Filtros")
     selected_lote = st.sidebar.selectbox("Seleccionar Lote", lote_options)
     selected_unidad = st.sidebar.selectbox("Seleccionar Unidad", unidad_options)
 
     # Filtrar los datos según la selección
-    filtered_df = df[(df['Lote'] == selected_lote) & (df['Unidad'] == selected_unidad)]
+    filtered_df = df.copy()
+    if selected_lote != "Todos":
+        filtered_df = filtered_df[filtered_df['Lote'] == selected_lote]
+    if selected_unidad != "Todos":
+        filtered_df = filtered_df[filtered_df['Unidad'] == selected_unidad]
 
     # Verificar si hay datos después del filtrado
     if filtered_df.empty:
