@@ -126,7 +126,7 @@ else:
 
             # Crear segundo eje (para gráfico de barras apiladas)
             ax2 = ax1.twinx()
-            percentages = filtered_df.groupby(['Fecha', 'C. Externa']).size().unstack(fill_value=0)
+            percentages = filtered_df.groupby(['Mes-Dia', 'C. Externa']).size().unstack(fill_value=0)
             percentages = percentages.div(percentages.sum(axis=1), axis=0) * 100
 
             percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=palette)
