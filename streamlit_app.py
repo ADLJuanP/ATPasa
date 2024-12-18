@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import matplotlib.dates as mdates
 from io import BytesIO
 import requests
 import openpyxl
@@ -63,6 +62,9 @@ else:
         # Ordenar por fecha
         filtered_df = filtered_df.sort_values(by='Fecha')
 
+        # Convertir las fechas a un formato categórico para que seaborn las maneje correctamente
+        filtered_df['Fecha'] = pd.to_datetime(filtered_df['Fecha']).dt.strftime('%Y-%m-%d')
+
         # Configuración de la figura
         fig, ax1 = plt.subplots(figsize=(14, 8))
 
@@ -79,7 +81,7 @@ else:
                       jitter=True, alpha=0.7, palette=condition_color_map, dodge=True, ax=ax1, legend=False)
 
         # Configurar las etiquetas de fecha en el eje x
-        ax1.set_xticklabels(filtered_df['Fecha'].astype(str), rotation=90)
+        ax1.set_xticklabels(filtered_df['Fecha'], rotation=90)
 
         # Agregar título y etiquetas
         ax1.set_ylabel("ATPasa", fontsize=12)
@@ -102,3 +104,4 @@ else:
 
         # Mostrar el gráfico en Streamlit
         st.pyplot(fig)
+
