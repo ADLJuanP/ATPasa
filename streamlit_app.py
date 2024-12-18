@@ -5,6 +5,7 @@ import seaborn as sns
 import matplotlib.dates as mdates
 from io import BytesIO
 import requests
+import openpyxl
 
 # Configuración de la página de Streamlit
 st.set_page_config(layout="wide", page_title="Dashboard ATPasa")
