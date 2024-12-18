@@ -27,7 +27,15 @@ def load_data(download_url):
         st.error("No se pudo descargar el archivo. Verifica el enlace.")
         return None
 
-df = load_data(url)
+# Variable para almacenar el DataFrame
+if 'df' not in st.session_state:
+    st.session_state.df = load_data(url)
+
+# Botón para recargar los datos
+if st.button("Recargar datos"):
+    st.session_state.df = load_data(url)  # Recargar el DataFrame
+
+df = st.session_state.df
 
 # Validar si `df` es válido
 if df is None or df.empty:
