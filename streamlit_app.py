@@ -14,7 +14,7 @@ st.set_page_config(layout="wide", page_title="Dashboard ATPasa")
 url = "https://drive.google.com/uc?id=1I4gN0K0S2RQmqpSPb2dQOM9effOhfNCO"
 
 # Descargar el archivo
-@st.cache_data
+@st.cache_data(show_spinner=False)
 def load_data(download_url):
     response = requests.get(download_url)
     if response.status_code == 200:
@@ -30,17 +30,24 @@ def load_data(download_url):
 # Recargar los datos cuando el botón es presionado
 if st.button("Recargar datos"):
     df = load_data(url)  # Descargar los datos nuevamente
+    st.session_state.df = df  # Guardar en session_state
 else:
     if 'df' not in st.session_state:
         st.session_state.df = load_data(url)  # Descargar los datos si no están en session_state
 
     df = st.session_state.df
 
-# Validar si `df` es válido
+# Verificar que el archivo se descargó correctamente
 if df is None or df.empty:
     st.warning("No se encontraron datos. Revisa el enlace o el formato del archivo.")
 else:
-    # Asegurarse de que la columna 'Fecha' esté en formato datetime (sin horas ni minutos)
+    # Mostrar las primeras filas del DataFrame para depurar
+    st.write("Primeras filas del DataFrame:", df.head())
+
+    # Verificar las columnas del DataFrame
+    st.write("Columnas disponibles en el archivo:", df.columns.tolist())
+
+    # Asegurarse de que la columna 'Fecha' esté en formato datetime
     df['Fecha'] = pd.to_datetime(df['Fecha'], format='%d-%m-%Y', errors='coerce')  # Especificar el formato 'dd-mm-yyyy'
     
     # Eliminar fechas no válidas (NaT)
