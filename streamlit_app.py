@@ -24,7 +24,7 @@ def load_data(download_url):
             st.error(f"Error al leer el archivo: {e}")
             return None
     else:
-        st.error("No se pudo descargar el archivo. Verifica el enlace.")
+        st.error("No se pudo descargar el archivo. verifica el enlace.")
         return None
 
 # Recargar los datos cuando el botón es presionado
