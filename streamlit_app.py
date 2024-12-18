@@ -34,14 +34,8 @@ if df is None or df.empty:
     st.warning("No se encontraron datos. Revisa el enlace o el formato del archivo.")
 else:
     # Asegurarse de que la columna 'Fecha' esté en formato datetime (sin horas ni minutos)
-    df['Fecha'] = pd.to_datetime(df['Fecha'], format='%d-%m-%Y', errors='coerce')  # Especificar el formato 'dd-mm-yyyy'
-    
-    # Eliminar fechas no válidas (NaT)
-    df = df.dropna(subset=['Fecha'])
-
-    # Asegurarse de que 'ATPasa' sea numérico
-    df['ATPasa'] = pd.to_numeric(df['ATPasa'], errors='coerce')  # Convierte a NaN cualquier valor no numérico
-    df = df.dropna(subset=['ATPasa'])  # Eliminar filas con 'ATPasa' no numérico
+    df['Fecha'] = pd.to_datetime(df['Fecha'], errors='coerce').dt.date  # Convertir a solo fecha (sin tiempo)
+    df = df.dropna(subset=['Fecha'])  # Eliminar fechas no válidas
 
     # Crear opciones para los filtros
     centro_options = ['Todos'] + df['Centro'].unique().tolist()
@@ -50,17 +44,17 @@ else:
 
     st.sidebar.header("Filtros")
     selected_centro = st.sidebar.selectbox("Seleccionar Centro", centro_options)
-    selected_lote = st.sidebar.selectbox("Seleccionar Lote", lote_options)
-    selected_unidad = st.sidebar.selectbox("Seleccionar Unidad", unidad_options)
+    selected_lote = st.sidebar.multiselect("Seleccionar Lote", lote_options)
+    selected_unidad = st.sidebar.multiselect("Seleccionar Unidad", unidad_options)
 
     # Filtrar los datos según la selección
     filtered_df = df.copy()
     if selected_centro != 'Todos':
         filtered_df = filtered_df[filtered_df['Centro'] == selected_centro]
-    if selected_lote != 'Todos':
-        filtered_df = filtered_df[filtered_df['Lote'] == selected_lote]
-    if selected_unidad != 'Todos':
-        filtered_df = filtered_df[filtered_df['Unidad'] == selected_unidad]
+    if selected_lote:
+        filtered_df = filtered_df[filtered_df['Lote'].isin(selected_lote)]
+    if selected_unidad:
+        filtered_df = filtered_df[filtered_df['Unidad'].isin(selected_unidad)]
 
     # Verificar si hay datos después del filtrado
     if filtered_df.empty:
@@ -72,23 +66,25 @@ else:
         # Configuración de la figura
         fig, ax1 = plt.subplots(figsize=(14, 8))
 
-        # Crear la paleta de colores
-        palette = sns.color_palette("pastel", n_colors=filtered_df['C. Externa'].nunique()).as_hex()
+        # Crear una paleta de colores consistente para "C. Externa"
+        unique_conditions = sorted(filtered_df['C. Externa'].unique())  # Asegurar el mismo orden
+        palette = sns.color_palette("Set2", n_colors=len(unique_conditions)).as_hex()
+        condition_color_map = dict(zip(unique_conditions, palette))
 
         # Crear el boxplot
         sns.boxplot(x=filtered_df['Fecha'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
 
-        # Crear el stripplot
+        # Crear el stripplot con colores consistentes
         sns.stripplot(x=filtered_df['Fecha'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
-                      jitter=True, alpha=0.7, palette=palette, dodge=True, ax=ax1, legend=False)
+                      jitter=True, alpha=0.7, palette=condition_color_map, dodge=True, ax=ax1, legend=False)
 
         # Configurar las etiquetas de fecha en el eje x
-        ax1.set_xticklabels(filtered_df['Fecha'].dt.strftime('%d-%m-%Y'), rotation=90)  # Asegúrate de mostrar la fecha en formato adecuado
+        ax1.set_xticklabels(filtered_df['Fecha'].astype(str), rotation=90)
 
         # Agregar título y etiquetas
         ax1.set_ylabel("ATPasa", fontsize=12)
         ax1.set_title(
-            f"Evolución ATPasa y Condición Externa\nCentro: {selected_centro}, Lote: {selected_lote}, Unidad: {selected_unidad}",
+            f"Evolución ATPasa y Condición Externa\nCentro: {selected_centro}, Lote(s): {', '.join(selected_lote) if selected_lote else 'Todos'}, Unidad(es): {', '.join(selected_unidad) if selected_unidad else 'Todos'}",
             fontsize=16
         )
 
@@ -106,4 +102,3 @@ else:
 
         # Mostrar el gráfico en Streamlit
         st.pyplot(fig)
-
