@@ -36,6 +36,10 @@ else:
     df['Fecha'] = pd.to_datetime(df['Fecha'], errors='coerce').dt.date  # Convertir a solo fecha (sin tiempo)
     df = df.dropna(subset=['Fecha'])  # Eliminar fechas no válidas
 
+    # Crear las nuevas columnas 'Mes-Día' y 'FechaNum'
+    df['Mes-Día'] = df['Fecha'].apply(lambda x: x.strftime('%m-%d'))  # Para mostrar en la gráfica
+    df['FechaNum'] = pd.to_numeric(df['Fecha'].apply(lambda x: x.strftime('%Y%m%d')), errors='coerce')  # Para ordenar
+
     # Crear opciones para los filtros
     centro_options = ['Todos'] + df['Centro'].unique().tolist()
     lote_options = ['Todos'] + df['Lote'].unique().tolist()
@@ -59,11 +63,8 @@ else:
     if filtered_df.empty:
         st.warning("No hay datos para los filtros seleccionados.")
     else:
-        # Ordenar por fecha
-        filtered_df = filtered_df.sort_values(by='Fecha')
-
-        # Convertir la columna 'Fecha' en formato datetime a un formato adecuado para el gráfico
-        filtered_df['Fecha'] = pd.to_datetime(filtered_df['Fecha']).dt.strftime('%Y-%m-%d')
+        # Ordenar por la columna 'FechaNum' para asegurar el orden correcto
+        filtered_df = filtered_df.sort_values(by='FechaNum')
 
         # Configuración de la figura
         fig, ax1 = plt.subplots(figsize=(14, 8))
@@ -74,14 +75,14 @@ else:
         condition_color_map = dict(zip(unique_conditions, palette))
 
         # Crear el boxplot
-        sns.boxplot(x=filtered_df['Fecha'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
+        sns.boxplot(x=filtered_df['Mes-Día'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
 
         # Crear el stripplot con colores consistentes
-        sns.stripplot(x=filtered_df['Fecha'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
+        sns.stripplot(x=filtered_df['Mes-Día'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
                       jitter=True, alpha=0.7, palette=condition_color_map, dodge=True, ax=ax1, legend=False)
 
         # Configurar las etiquetas de fecha en el eje x
-        ax1.set_xticklabels(filtered_df['Fecha'], rotation=90)
+        ax1.set_xticklabels(filtered_df['Mes-Día'], rotation=90)
 
         # Agregar título y etiquetas
         ax1.set_ylabel("ATPasa", fontsize=12)
@@ -92,7 +93,7 @@ else:
 
         # Crear segundo eje (para gráfico de barras apiladas)
         ax2 = ax1.twinx()
-        percentages = filtered_df.groupby(['Fecha', 'C. Externa']).size().unstack(fill_value=0)
+        percentages = filtered_df.groupby(['Mes-Día', 'C. Externa']).size().unstack(fill_value=0)
         percentages = percentages.div(percentages.sum(axis=1), axis=0) * 100
 
         percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=palette)
@@ -104,4 +105,3 @@ else:
 
         # Mostrar el gráfico en Streamlit
         st.pyplot(fig)
-
