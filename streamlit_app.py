@@ -90,21 +90,24 @@ else:
         lote_title = ', '.join(map(str, selected_lote)) if selected_lote else 'Todos'
         unidad_title = ', '.join(map(str, selected_unidad)) if selected_unidad else 'Todos'
 
+        # Crear la columna 'Mes-Día' si no existe
+        filtered_df['Mes-Día'] = filtered_df['Fecha'].dt.strftime('%d-%m')
+
         # Configuración de la figura
         fig, ax1 = plt.subplots(figsize=(14, 8))
 
         # Crear la paleta de colores
         palette = sns.color_palette("pastel", n_colors=filtered_df['C. Externa'].nunique()).as_hex()
 
-        # Crear el boxplot
-        sns.boxplot(x=filtered_df['Fecha'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
+        # Crear el boxplot usando 'Mes-Día'
+        sns.boxplot(x=filtered_df['Mes-Día'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
 
         # Crear el stripplot
-        sns.stripplot(x=filtered_df['Fecha'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
+        sns.stripplot(x=filtered_df['Mes-Día'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
                       jitter=True, alpha=0.7, palette=palette, dodge=True, ax=ax1, legend=False)
 
         # Configurar las etiquetas de fecha en el eje x
-        ax1.set_xticklabels(filtered_df['Fecha'].dt.strftime('%d-%m-%Y'), rotation=90)  # Asegúrate de mostrar la fecha en formato adecuado
+        ax1.set_xticklabels(filtered_df['Mes-Día'], rotation=90)  # Mostrar 'Mes-Día' en el eje X
 
         # Agregar título y etiquetas
         ax1.set_ylabel("ATPasa", fontsize=12)
