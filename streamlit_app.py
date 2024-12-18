@@ -50,10 +50,17 @@ else:
     selected_lote = st.sidebar.selectbox("Seleccionar Lote", lote_options)
     selected_unidad = st.sidebar.selectbox("Seleccionar Unidad", unidad_options)
 
-    # Filtrar los datos
-    filtered_df = df[(df['Centro'] == selected_centro if selected_centro != "Todos" else df['Centro']) & 
-                     (df['Lote'] == selected_lote if selected_lote != "Todos" else df['Lote']) & 
-                     (df['Unidad'] == selected_unidad if selected_unidad != "Todos" else df['Unidad'])]
+    # Filtrar los datos de manera clara
+    filtered_df = df
+
+    if selected_centro != "Todos":
+        filtered_df = filtered_df[filtered_df['Centro'] == selected_centro]
+
+    if selected_lote != "Todos":
+        filtered_df = filtered_df[filtered_df['Lote'] == selected_lote]
+
+    if selected_unidad != "Todos":
+        filtered_df = filtered_df[filtered_df['Unidad'] == selected_unidad]
 
     # Verificar si hay datos después del filtrado
     if filtered_df.empty:
