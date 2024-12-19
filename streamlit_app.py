@@ -82,13 +82,16 @@ else:
     if filtered_df.empty:
         st.warning("No hay datos para los filtros seleccionados.")
     else:
-        # Ordenar por la columna 'Fecha'
+        # Ordenar por la columna 'Fecha' para que los datos se alineen cronológicamente
         filtered_df = filtered_df.sort_values(by='Fecha')
 
         # Verificar si la columna 'Mes-Dia' existe en los datos
         if 'Mes-Dia' not in filtered_df.columns:
             st.error("La columna 'Mes-Dia' no está presente en los datos.")
         else:
+            # Ordenar las etiquetas de 'Mes-Dia' según la columna 'Fecha'
+            ordered_labels = filtered_df.drop_duplicates(subset=['Mes-Dia']).sort_values(by='Fecha')['Mes-Dia']
+
             # Configuración de la figura
             fig, ax1 = plt.subplots(figsize=(14, 8))
 
@@ -102,8 +105,7 @@ else:
             sns.stripplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
                           jitter=True, alpha=0.7, palette=palette, dodge=True, ax=ax1, legend=False)
 
-            # Ordenar las etiquetas de 'Mes-Dia' según la columna 'Fecha'
-            ordered_labels = filtered_df.drop_duplicates(subset=['Mes-Dia']).sort_values(by='Fecha')['Mes-Dia']
+            # Ordenar las etiquetas en el eje X de acuerdo a la columna 'Fecha'
             ax1.set_xticks(range(len(ordered_labels)))
             ax1.set_xticklabels(ordered_labels, rotation=90)
 
@@ -113,8 +115,12 @@ else:
 
             # Crear segundo eje (para gráfico de barras apiladas)
             ax2 = ax1.twinx()
+
             percentages = filtered_df.groupby(['Mes-Dia', 'C. Externa']).size().unstack(fill_value=0)
             percentages = percentages.div(percentages.sum(axis=1), axis=0) * 100
+
+            # Ordenar el gráfico de barras según 'Mes-Dia' (usando el mismo orden que ax1)
+            percentages = percentages.loc[ordered_labels]
 
             percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=palette)
 
@@ -125,5 +131,4 @@ else:
 
             # Mostrar el gráfico en Streamlit
             st.pyplot(fig)
-
 
