@@ -95,8 +95,11 @@ else:
             # Configuración de la figura
             fig, ax1 = plt.subplots(figsize=(14, 8))
 
-            # Crear la paleta de colores
-            palette = sns.color_palette("pastel", n_colors=filtered_df['C. Externa'].nunique()).as_hex()
+            # Obtener las categorías únicas de 'Condición Externa' presentes en los datos filtrados
+            condiciones_externas = filtered_df['C. Externa'].unique()
+
+            # Crear la paleta de colores en función de las categorías presentes
+            palette = sns.color_palette("pastel", n_colors=len(condiciones_externas)).as_hex()
 
             # Crear el boxplot usando 'Mes-Dia'
             sns.boxplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
@@ -122,6 +125,7 @@ else:
             # Ordenar el gráfico de barras según 'Mes-Dia' (usando el mismo orden que ax1)
             percentages = percentages.loc[ordered_labels]
 
+            # Crear las barras apiladas con la paleta de colores ajustada
             percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=palette)
 
             ax2.set_ylabel("% de Categoría", fontsize=12)
