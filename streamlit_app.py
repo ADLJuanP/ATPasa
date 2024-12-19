@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from io import BytesIO
 import requests
+import openpyxl
+
+# Configuración de la página de Streamlit
+st.set_page_config(layout="wide", page_title="Dashboard ATPasa")
 
 # Enlace de descarga directa del archivo de Google Drive
 url = "https://drive.google.com/uc?id=1I4gN0K0S2RQmqpSPb2dQOM9effOhfNCO"
@@ -78,55 +82,53 @@ else:
     if filtered_df.empty:
         st.warning("No hay datos para los filtros seleccionados.")
     else:
-        # Asegurarse de que 'C. Externa' sea numérico
-        filtered_df['C. Externa'] = pd.to_numeric(filtered_df['C. Externa'], errors='coerce')
+        # Ordenar por la columna 'Fecha' para que los datos se alineen cronológicamente
+        filtered_df = filtered_df.sort_values(by='Fecha')
 
-        # Eliminar filas con 'C. Externa' no numérica
-        filtered_df = filtered_df.dropna(subset=['C. Externa'])
+        # Verificar si la columna 'Mes-Dia' existe en los datos
+        if 'Mes-Dia' not in filtered_df.columns:
+            st.error("La columna 'Mes-Dia' no está presente en los datos.")
+        else:
+            # Ordenar las etiquetas de 'Mes-Dia' según la columna 'Fecha'
+            ordered_labels = filtered_df.drop_duplicates(subset=['Mes-Dia']).sort_values(by='Fecha')['Mes-Dia']
 
-        # Verificar las categorías de 'C. Externa'
-        valid_columns = [2, 3, 4]
-        existing_categories = filtered_df['C. Externa'].unique()
-        missing_categories = [cat for cat in valid_columns if cat not in existing_categories]
+            # Configuración de la figura
+            fig, ax1 = plt.subplots(figsize=(14, 8))
 
-        if missing_categories:
-            st.warning(f"Faltan las siguientes categorías en los datos: {missing_categories}")
+            # Crear la paleta de colores
+            palette = sns.color_palette("pastel", n_colors=filtered_df['C. Externa'].nunique()).as_hex()
 
-        # Asegurarse de que solo seleccionamos las categorías que existen
-        valid_columns = [cat for cat in valid_columns if cat in existing_categories]
+            # Crear el boxplot usando 'Mes-Dia'
+            sns.boxplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
 
-        # Ordenar las etiquetas de 'Mes-Dia' según la columna 'Fecha'
-        ordered_labels = filtered_df.drop_duplicates(subset=['Mes-Dia']).sort_values(by='Fecha')['Mes-Dia']
+            # Crear el stripplot
+            sns.stripplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
+                          jitter=True, alpha=0.7, palette=palette, dodge=True, ax=ax1, legend=False)
 
-        # Crear la figura del gráfico
-        fig, ax1 = plt.subplots(figsize=(14, 8))
+            # Ordenar las etiquetas en el eje X de acuerdo a la columna 'Fecha'
+            ax1.set_xticks(range(len(ordered_labels)))
+            ax1.set_xticklabels(ordered_labels, rotation=90)
 
-        # Crear el boxplot usando 'Mes-Dia'
-        sns.boxplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
+            # Quitar el título del eje x
+            ax1.set_xlabel(None)
+            ax1.set_ylabel("ATPasa", fontsize=12)
 
-        # Crear el stripplot
-        sns.stripplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
-                      jitter=True, alpha=0.7, dodge=True, ax=ax1, legend=False)
+            # Crear segundo eje (para gráfico de barras apiladas)
+            ax2 = ax1.twinx()
 
-        # Ordenar las etiquetas en el eje X de acuerdo a la columna 'Fecha'
-        ax1.set_xticks(range(len(ordered_labels)))
-        ax1.set_xticklabels(ordered_labels, rotation=90)
+            percentages = filtered_df.groupby(['Mes-Dia', 'C. Externa']).size().unstack(fill_value=0)
+            percentages = percentages.div(percentages.sum(axis=1), axis=0) * 100
 
-        # Quitar el título del eje x
-        ax1.set_xlabel(None)
-        ax1.set_ylabel("ATPasa", fontsize=12)
+            # Ordenar el gráfico de barras según 'Mes-Dia' (usando el mismo orden que ax1)
+            percentages = percentages.loc[ordered_labels]
 
-        # Crear segundo eje (para gráfico de barras apiladas)
-        ax2 = ax1.twinx()
+            percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=palette)
 
-        percentages = filtered_df.groupby(['Mes-Dia', 'C. Externa']).size().unstack(fill_value=0)
-        percentages = percentages.div(percentages.sum(axis=1), axis=0) * 100
+            ax2.set_ylabel("% de Categoría", fontsize=12)
+            ax2.set_ylim(0, 100)
+            ax2.grid(visible=False)
+            ax2.legend(title="Condición Externa", bbox_to_anchor=(1.15, 0.5), loc='center')
 
-        # Ordenar las categorías 2, 3, 4 en el gráfico de barras apiladas
-        ordered_percentages = percentages[valid_columns]
+            # Mostrar el gráfico en Streamlit
+            st.pyplot(fig)
 
-        # Crear las barras apiladas con la paleta de colores ajustada
-        ordered_percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=[color_mapping[cat] for cat in valid_columns])
-
-        # Mostrar el gráfico
-        st.pyplot(fig)
