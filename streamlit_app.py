@@ -96,7 +96,7 @@ else:
             fig, ax1 = plt.subplots(figsize=(14, 8))
             
             # Agregar título
-            ax1.set_title("Gráfico de ATPasa por Mes-Día y Categoría Externa", fontsize=16)
+            ax1.set_title("Evolución ATPasa y Condición Externa", fontsize=16)
             
             # Crear la paleta de colores
             palette = sns.color_palette("pastel", n_colors=filtered_df['C. Externa'].nunique()).as_hex()
