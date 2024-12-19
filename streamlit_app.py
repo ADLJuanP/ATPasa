@@ -82,11 +82,8 @@ else:
     if filtered_df.empty:
         st.warning("No hay datos para los filtros seleccionados.")
     else:
-        # Ordenar por FechaNum si existe
-        if 'FechaNum' in filtered_df.columns:
-            filtered_df = filtered_df.sort_values(by='FechaNum')
-        else:
-            filtered_df = filtered_df.sort_values(by='Fecha')
+        # Ordenar por la columna 'Fecha'
+        filtered_df = filtered_df.sort_values(by='Fecha')
 
         # Verificar si la columna 'Mes-Dia' existe en los datos
         if 'Mes-Dia' not in filtered_df.columns:
@@ -105,8 +102,8 @@ else:
             sns.stripplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
                           jitter=True, alpha=0.7, palette=palette, dodge=True, ax=ax1, legend=False)
 
-            # Configurar las etiquetas de fecha en el eje x ordenadas por FechaNum
-            ordered_labels = filtered_df.drop_duplicates(subset=['Mes-Dia']).sort_values(by='FechaNum')['Mes-Dia']
+            # Ordenar las etiquetas de 'Mes-Dia' según la columna 'Fecha'
+            ordered_labels = filtered_df.drop_duplicates(subset=['Mes-Dia']).sort_values(by='Fecha')['Mes-Dia']
             ax1.set_xticks(range(len(ordered_labels)))
             ax1.set_xticklabels(ordered_labels, rotation=90)
 
@@ -128,4 +125,5 @@ else:
 
             # Mostrar el gráfico en Streamlit
             st.pyplot(fig)
+
 
