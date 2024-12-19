@@ -42,16 +42,12 @@ if df is None or df.empty:
 else:
     # Asegurarse de que la columna 'Fecha' esté en formato datetime
     df['Fecha'] = pd.to_datetime(df['Fecha'], format='%d-%m-%Y', errors='coerce')  # Especificar el formato 'dd-mm-yyyy'
-    
-    # Eliminar fechas no válidas (NaT)
-    df = df.dropna(subset=['Fecha'])
+    df = df.dropna(subset=['Fecha'])  # Eliminar fechas no válidas
 
     # Reemplazar comas por puntos en los valores numéricos
     df['ATPasa'] = df['ATPasa'].astype(str).str.replace(',', '.', regex=False)
-    
-    # Asegurarse de que 'ATPasa' sea numérico después de reemplazar las comas
-    df['ATPasa'] = pd.to_numeric(df['ATPasa'], errors='coerce')  # Convierte a NaN cualquier valor no numérico
-    df = df.dropna(subset=['ATPasa'])  # Eliminar filas con 'ATPasa' no numérico
+    df['ATPasa'] = pd.to_numeric(df['ATPasa'], errors='coerce')  # Convertir a numérico
+    df = df.dropna(subset=['ATPasa'])  # Eliminar filas con 'ATPasa' no válido
 
     # Crear opciones para los filtros
     centro_options = ['Todos'] + df['Centro'].unique().tolist()
@@ -66,10 +62,9 @@ else:
     # Validar que selected_unidad siempre sea una lista
     if selected_unidad == []:  # Si no se seleccionan unidades, poner 'Todos'
         selected_unidad = ['Todos']
-    
+
     # Filtrar los datos según la selección
     filtered_df = df.copy()
-
     if selected_centro and 'Todos' not in selected_centro:
         filtered_df = filtered_df[filtered_df['Centro'].isin(selected_centro)]
     if selected_lote and 'Todos' not in selected_lote:
@@ -105,32 +100,32 @@ else:
             sns.stripplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
                           jitter=True, alpha=0.7, palette=palette, dodge=True, ax=ax1, legend=False)
 
-      # Configurar las etiquetas de fecha en el eje x
-    ax1.set_xticklabels(filtered_df['Mes-Dia'], rotation=90)  # Mostrar 'Mes-Dia' en el eje X
+            # Configurar las etiquetas de fecha en el eje x
+            ax1.set_xticklabels(filtered_df['Mes-Dia'], rotation=90)  # Mostrar 'Mes-Dia' en el eje X
+            ax1.set_xlabel('')  # Quitar el título del eje x
 
-    # **Quitar el título del eje x**
-    ax1.set_xlabel('')  
+            # Agregar título y etiquetas
+            ax1.set_ylabel("ATPasa", fontsize=12)
+            ax1.set_title(
+                f"Evolución ATPasa y Condición Externa\nCentro(s): {', '.join(selected_centro)}, "
+                f"Lote(s): {', '.join(selected_lote)}, Unidad(es): {', '.join(selected_unidad)}",
+                fontsize=16
+            )
 
-    # Agregar título y etiquetas
-    ax1.set_ylabel("ATPasa", fontsize=12)
-    ax1.set_title(
-        f"Evolución ATPasa y Condición Externa\nCentro(s): {centro_title}, Lote(s): {lote_title}, Unidad(es): {unidad_title}",
-        fontsize=16
-    )
+            # Crear segundo eje (para gráfico de barras apiladas)
+            ax2 = ax1.twinx()
+            percentages = filtered_df.groupby(['Mes-Dia', 'C. Externa']).size().unstack(fill_value=0)
+            percentages = percentages.div(percentages.sum(axis=1), axis=0) * 100
 
-    # Crear segundo eje (para gráfico de barras apiladas)
-    ax2 = ax1.twinx()
-    percentages = filtered_df.groupby(['Mes-Dia', 'C. Externa']).size().unstack(fill_value=0)
-    percentages = percentages.div(percentages.sum(axis=1), axis=0) * 100
+            percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=palette)
 
-    percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=palette)
+            ax2.set_ylabel("% de Categoría", fontsize=12)
+            ax2.set_ylim(0, 100)
+            ax2.grid(visible=False)
+            ax2.legend(title="Condición Externa", bbox_to_anchor=(1.15, 0.5), loc='center')
 
-    ax2.set_ylabel("% de Categoría", fontsize=12)
-    ax2.set_ylim(0, 100)
-    ax2.grid(visible=False)
-    ax2.legend(title="Condición Externa", bbox_to_anchor=(1.15, 0.5), loc='center')
+            # Mostrar el gráfico en Streamlit
+            st.pyplot(fig)
 
-    # Mostrar el gráfico en Streamlit
-    st.pyplot(fig)
 
 
