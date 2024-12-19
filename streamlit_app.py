@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import matplotlib.dates as mdates
 from io import BytesIO
 import requests
 import openpyxl
@@ -14,7 +13,7 @@ st.set_page_config(layout="wide", page_title="Dashboard ATPasa")
 url = "https://drive.google.com/uc?id=1I4gN0K0S2RQmqpSPb2dQOM9effOhfNCO"
 
 # Descargar el archivo
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False, ttl=300)  # TTL opcional: los datos se recargan cada 5 minutos
 def load_data(download_url):
     response = requests.get(download_url)
     if response.status_code == 200:
@@ -27,26 +26,20 @@ def load_data(download_url):
         st.error("No se pudo descargar el archivo. Verifica el enlace.")
         return None
 
-# Recargar los datos cuando el botón es presionado
+# Cargar datos al inicio o recargar al presionar el botón
 if st.button("Recargar datos"):
     df = load_data(url)  # Descargar los datos nuevamente
-    st.session_state.df = df  # Guardar en session_state
-else:
-    if 'df' not in st.session_state:
-        st.session_state.df = load_data(url)  # Descargar los datos si no están en session_state
+    st.session_state.df = df  # Actualizar en session_state
+    st.success("Datos recargados correctamente.")
+elif 'df' not in st.session_state or st.session_state.df is None:
+    st.session_state.df = load_data(url)  # Descargar los datos por primera vez si no están en session_state
 
-    df = st.session_state.df
+df = st.session_state.df
 
 # Verificar que el archivo se descargó correctamente
 if df is None or df.empty:
     st.warning("No se encontraron datos. Revisa el enlace o el formato del archivo.")
 else:
-    # Mostrar las primeras filas del DataFrame para depurar
-    st.write("Primeras filas del DataFrame:", df.head())
-
-    # Verificar las columnas del DataFrame
-    st.write("Columnas disponibles en el archivo:", df.columns.tolist())
-
     # Asegurarse de que la columna 'Fecha' esté en formato datetime
     df['Fecha'] = pd.to_datetime(df['Fecha'], format='%d-%m-%Y', errors='coerce')  # Especificar el formato 'dd-mm-yyyy'
     
@@ -92,11 +85,6 @@ else:
         # Ordenar por fecha
         filtered_df = filtered_df.sort_values(by='Fecha')
 
-        # Generar el título de forma segura
-        centro_title = ', '.join(map(str, selected_centro)) if selected_centro else 'Todos'
-        lote_title = ', '.join(map(str, selected_lote)) if selected_lote else 'Todos'
-        unidad_title = ', '.join(map(str, selected_unidad)) if selected_unidad else 'Todos'
-
         # Verificar si la columna 'Mes-Dia' existe en los datos
         if 'Mes-Dia' not in filtered_df.columns:
             st.error("La columna 'Mes-Dia' no está presente en los datos.")
@@ -114,15 +102,13 @@ else:
             sns.stripplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
                           jitter=True, alpha=0.7, palette=palette, dodge=True, ax=ax1, legend=False)
 
-            # Configurar las etiquetas de fecha en el eje x
-            ax1.set_xticklabels(filtered_df['Mes-Dia'], rotation=90)  # Mostrar 'Mes-Dia' en el eje X
+            # Configurar las etiquetas de fecha en el eje x ordenadas por la columna 'Fecha'
+            ordered_labels = filtered_df.sort_values(by='Fecha')['Mes-Dia'].unique()
+            ax1.set_xticks(range(len(ordered_labels)))
+            ax1.set_xticklabels(ordered_labels, rotation=90)
 
             # Agregar título y etiquetas
             ax1.set_ylabel("ATPasa", fontsize=12)
-            ax1.set_title(
-                f"Evolución ATPasa y Condición Externa\nCentro(s): {centro_title}, Lote(s): {lote_title}, Unidad(es): {unidad_title}",
-                fontsize=16
-            )
 
             # Crear segundo eje (para gráfico de barras apiladas)
             ax2 = ax1.twinx()
