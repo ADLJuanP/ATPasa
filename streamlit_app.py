@@ -92,12 +92,12 @@ else:
             # Ordenar las etiquetas de 'Mes-Dia' según la columna 'Fecha'
             ordered_labels = filtered_df.drop_duplicates(subset=['Mes-Dia']).sort_values(by='Fecha')['Mes-Dia']
 
-            # Configuración de la figura
-            fig, ax1 = plt.subplots(figsize=(14, 8))
-
             # Definir una paleta de colores fija para las categorías de 'Condición Externa' (2, 3 y 4)
             color_mapping = {2: "#1f77b4", 3: "#ff7f0e", 4: "#2ca02c"}  # Colores fijos para las categorías 2, 3 y 4
             filtered_df['C. Externa'] = filtered_df['C. Externa'].map(color_mapping)
+
+            # Configuración de la figura
+            fig, ax1 = plt.subplots(figsize=(14, 8))
 
             # Crear el boxplot usando 'Mes-Dia'
             sns.boxplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
@@ -120,17 +120,18 @@ else:
             percentages = filtered_df.groupby(['Mes-Dia', 'C. Externa']).size().unstack(fill_value=0)
             percentages = percentages.div(percentages.sum(axis=1), axis=0) * 100
 
-            # Ordenar el gráfico de barras según 'Mes-Dia' (usando el mismo orden que ax1)
-            percentages = percentages.loc[ordered_labels]
+            # Ordenar las categorías 2, 3, 4 en el gráfico de barras apiladas
+            ordered_percentages = percentages[[2, 3, 4]]
 
             # Crear las barras apiladas con la paleta de colores ajustada
-            percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=[color_mapping[cat] for cat in [2, 3, 4]])
+            ordered_percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=[color_mapping[cat] for cat in [2, 3, 4]])
 
             ax2.set_ylabel("% de Categoría", fontsize=12)
             ax2.set_ylim(0, 100)
             ax2.grid(visible=False)
-            ax2.legend(title="Condición Externa", bbox_to_anchor=(1.15, 0.5), loc='center')
+
+            # Crear una leyenda personalizada para mostrar las categorías con sus nombres
+            ax2.legend(title="Condición Externa", labels=["2", "3", "4"], bbox_to_anchor=(1.15, 0.5), loc='center')
 
             # Mostrar el gráfico en Streamlit
             st.pyplot(fig)
-
