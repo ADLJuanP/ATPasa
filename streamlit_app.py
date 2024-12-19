@@ -95,18 +95,16 @@ else:
             # Configuración de la figura
             fig, ax1 = plt.subplots(figsize=(14, 8))
 
-            # Obtener las categorías únicas de 'Condición Externa' presentes en los datos filtrados
-            condiciones_externas = filtered_df['C. Externa'].unique()
-
-            # Crear la paleta de colores en función de las categorías presentes
-            palette = sns.color_palette("pastel", n_colors=len(condiciones_externas)).as_hex()
+            # Definir una paleta de colores fija para las categorías de 'Condición Externa' (2, 3 y 4)
+            color_mapping = {2: "#1f77b4", 3: "#ff7f0e", 4: "#2ca02c"}  # Colores fijos para las categorías 2, 3 y 4
+            filtered_df['C. Externa'] = filtered_df['C. Externa'].map(color_mapping)
 
             # Crear el boxplot usando 'Mes-Dia'
             sns.boxplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
 
             # Crear el stripplot
             sns.stripplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
-                          jitter=True, alpha=0.7, palette=palette, dodge=True, ax=ax1, legend=False)
+                          jitter=True, alpha=0.7, dodge=True, ax=ax1, legend=False)
 
             # Ordenar las etiquetas en el eje X de acuerdo a la columna 'Fecha'
             ax1.set_xticks(range(len(ordered_labels)))
@@ -126,7 +124,7 @@ else:
             percentages = percentages.loc[ordered_labels]
 
             # Crear las barras apiladas con la paleta de colores ajustada
-            percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=palette)
+            percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=[color_mapping[cat] for cat in [2, 3, 4]])
 
             ax2.set_ylabel("% de Categoría", fontsize=12)
             ax2.set_ylim(0, 100)
