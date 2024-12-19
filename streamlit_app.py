@@ -82,6 +82,12 @@ else:
     if filtered_df.empty:
         st.warning("No hay datos para los filtros seleccionados.")
     else:
+        # Asegurarse de que 'C. Externa' sea numérico
+        filtered_df['C. Externa'] = pd.to_numeric(filtered_df['C. Externa'], errors='coerce')
+
+        # Eliminar filas con 'C. Externa' no numérica
+        filtered_df = filtered_df.dropna(subset=['C. Externa'])
+
         # Ordenar por la columna 'Fecha' para que los datos se alineen cronológicamente
         filtered_df = filtered_df.sort_values(by='Fecha')
 
@@ -120,11 +126,17 @@ else:
             percentages = filtered_df.groupby(['Mes-Dia', 'C. Externa']).size().unstack(fill_value=0)
             percentages = percentages.div(percentages.sum(axis=1), axis=0) * 100
 
+            # Asegurarse de que las categorías 2, 3 y 4 estén presentes
+            valid_columns = [2, 3, 4]
+            missing_columns = [col for col in valid_columns if col not in percentages.columns]
+            if missing_columns:
+                st.warning(f"Faltan las siguientes categorías en los datos: {missing_columns}")
+
             # Ordenar las categorías 2, 3, 4 en el gráfico de barras apiladas
-            ordered_percentages = percentages[[2, 3, 4]]
+            ordered_percentages = percentages[valid_columns]
 
             # Crear las barras apiladas con la paleta de colores ajustada
-            ordered_percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=[color_mapping[cat] for cat in [2, 3, 4]])
+            ordered_percentages.plot(kind='bar', stacked=True, ax=ax2, alpha=0.3, width=0.5, color=[color_mapping[cat] for cat in valid_columns])
 
             ax2.set_ylabel("% de Categoría", fontsize=12)
             ax2.set_ylim(0, 100)
