@@ -39,14 +39,8 @@ else:
 
 # Verificar que el archivo se descargó correctamente
 if df is None or df.empty:
-    st.warning("No se encontraron datos. Revisa el enlace o el formato del archivo.")
+    st.warning("No hay datos disponibles. Revisa el enlace o el formato del archivo.")
 else:
-    # Mostrar las primeras filas del DataFrame para depurar
-    st.write("Primeras filas del DataFrame:", df.head())
-
-    # Verificar las columnas del DataFrame
-    st.write("Columnas disponibles en el archivo:", df.columns.tolist())
-
     # Asegurarse de que la columna 'Fecha' esté en formato datetime
     df['Fecha'] = pd.to_datetime(df['Fecha'], format='%d-%m-%Y', errors='coerce')  # Especificar el formato 'dd-mm-yyyy'
     
@@ -117,6 +111,9 @@ else:
             # Configurar las etiquetas de fecha en el eje x
             ax1.set_xticklabels(filtered_df['Mes-Dia'], rotation=90)  # Mostrar 'Mes-Dia' en el eje X
 
+            # **Quitar el título del eje x**
+            ax1.set_xlabel('')  
+
             # Agregar título y etiquetas
             ax1.set_ylabel("ATPasa", fontsize=12)
             ax1.set_title(
@@ -138,3 +135,4 @@ else:
 
             # Mostrar el gráfico en Streamlit
             st.pyplot(fig)
+
