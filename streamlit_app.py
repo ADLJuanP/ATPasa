@@ -1,28 +1,111 @@
-# Verificar si la columna 'Mes-Dia' existe en los datos
-if 'Mes-Dia' not in filtered_df.columns:
-    st.error("La columna 'Mes-Dia' no está presente en los datos.")
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from io import BytesIO
+import requests
+import openpyxl
+
+# Configuración de la página de Streamlit
+st.set_page_config(layout="wide", page_title="Dashboard ATPasa")
+
+# Enlace de descarga directa del archivo de Google Drive
+url = "https://drive.google.com/uc?id=1I4gN0K0S2RQmqpSPb2dQOM9effOhfNCO"
+
+# Descargar el archivo
+@st.cache_data(show_spinner=False)
+def load_data(download_url):
+    response = requests.get(download_url)
+    if response.status_code == 200:
+        try:
+            return pd.read_excel(BytesIO(response.content), engine='openpyxl')
+        except Exception as e:
+            st.error(f"Error al leer el archivo: {e}")
+            return None
+    else:
+        st.error("No se pudo descargar el archivo. Verifica el enlace.")
+        return None
+
+# Recargar los datos cuando el botón es presionado
+if st.button("Recargar datos"):
+    df = load_data(url)  # Descargar los datos nuevamente
+    st.session_state.df = df  # Guardar en session_state
 else:
-    # Ordenar 'Mes-Dia' según la columna 'Fecha'
-    filtered_df['Mes-Dia'] = pd.Categorical(
-        filtered_df['Mes-Dia'],
-        categories=filtered_df.sort_values(by='Fecha')['Mes-Dia'].unique(),
-        ordered=True
-    )
+    if 'df' not in st.session_state:
+        st.session_state.df = load_data(url)  # Descargar los datos si no están en session_state
 
-    # Configuración de la figura
-    fig, ax1 = plt.subplots(figsize=(14, 8))
+    df = st.session_state.df
 
-    # Crear la paleta de colores
-    palette = sns.color_palette("pastel", n_colors=filtered_df['C. Externa'].nunique()).as_hex()
+# Verificar que el archivo se descargó correctamente
+if df is None or df.empty:
+    st.warning("No se encontraron datos. Revisa el enlace o el formato del archivo.")
+else:
+    # Asegurarse de que la columna 'Fecha' esté en formato datetime
+    df['Fecha'] = pd.to_datetime(df['Fecha'], format='%d-%m-%Y', errors='coerce')  # Especificar el formato 'dd-mm-yyyy'
+    
+    # Eliminar fechas no válidas (NaT)
+    df = df.dropna(subset=['Fecha'])
 
-    # Crear el boxplot usando 'Mes-Dia'
-    sns.boxplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
+    # Reemplazar comas por puntos en los valores numéricos
+    df['ATPasa'] = df['ATPasa'].astype(str).str.replace(',', '.', regex=False)
+    
+    # Asegurarse de que 'ATPasa' sea numérico después de reemplazar las comas
+    df['ATPasa'] = pd.to_numeric(df['ATPasa'], errors='coerce')  # Convierte a NaN cualquier valor no numérico
+    df = df.dropna(subset=['ATPasa'])  # Eliminar filas con 'ATPasa' no numérico
 
-    # Crear el stripplot
-    sns.stripplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
-                  jitter=True, alpha=0.7, palette=palette, dodge=True, ax=ax1, legend=False)
+    # Crear opciones para los filtros
+    centro_options = ['Todos'] + df['Centro'].unique().tolist()
+    lote_options = ['Todos'] + df['Lote'].unique().tolist()
+    unidad_options = ['Todos'] + df['Unidad'].unique().tolist()
 
-    # Configurar las etiquetas de fecha en el eje x
+    st.sidebar.header("Filtros")
+    selected_centro = st.sidebar.multiselect("Seleccionar Centro", centro_options)
+    selected_lote = st.sidebar.multiselect("Seleccionar Lote", lote_options)
+    selected_unidad = st.sidebar.multiselect("Seleccionar Unidad", unidad_options)
+
+    # Validar que selected_unidad siempre sea una lista
+    if selected_unidad == []:  # Si no se seleccionan unidades, poner 'Todos'
+        selected_unidad = ['Todos']
+    
+    # Filtrar los datos según la selección
+    filtered_df = df.copy()
+
+    if selected_centro and 'Todos' not in selected_centro:
+        filtered_df = filtered_df[filtered_df['Centro'].isin(selected_centro)]
+    if selected_lote and 'Todos' not in selected_lote:
+        filtered_df = filtered_df[filtered_df['Lote'].isin(selected_lote)]
+    if selected_unidad and 'Todos' not in selected_unidad:
+        filtered_df = filtered_df[filtered_df['Unidad'].isin(selected_unidad)]
+
+    # Verificar si hay datos después del filtrado
+    if filtered_df.empty:
+        st.warning("No hay datos para los filtros seleccionados.")
+    else:
+        # Verificar si la columna 'Mes-Dia' existe en los datos
+        if 'Mes-Dia' not in filtered_df.columns:
+            st.error("La columna 'Mes-Dia' no está presente en los datos.")
+        else:
+            # Ordenar 'Mes-Dia' según la columna 'Fecha'
+            filtered_df['Mes-Dia'] = pd.Categorical(
+                filtered_df['Mes-Dia'],
+                categories=filtered_df.sort_values(by='Fecha')['Mes-Dia'].unique(),
+                ordered=True
+            )
+
+            # Configuración de la figura
+            fig, ax1 = plt.subplots(figsize=(14, 8))
+
+            # Crear la paleta de colores
+            palette = sns.color_palette("pastel", n_colors=filtered_df['C. Externa'].nunique()).as_hex()
+
+            # Crear el boxplot usando 'Mes-Dia'
+            sns.boxplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], showfliers=False, color="lightblue", ax=ax1)
+
+            # Crear el stripplot
+            sns.stripplot(x=filtered_df['Mes-Dia'], y=filtered_df['ATPasa'], hue=filtered_df['C. Externa'],
+                          jitter=True, alpha=0.7, palette=palette, dodge=True, ax=ax1, legend=False)
+
+      # Configurar las etiquetas de fecha en el eje x
     ax1.set_xticklabels(filtered_df['Mes-Dia'], rotation=90)  # Mostrar 'Mes-Dia' en el eje X
 
     # **Quitar el título del eje x**
